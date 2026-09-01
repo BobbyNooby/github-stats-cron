@@ -26,14 +26,22 @@ export function initDb(path: string): Database {
       repo_count  INTEGER NOT NULL DEFAULT 0
     );
   `);
+  // migrate: drop old month-granular table (data recomputable from git)
+  const cols = db
+    .query<{ name: string }, []>("PRAGMA table_info(commit_history)")
+    .all()
+    .map((c) => c.name);
+  if (cols.length > 0 && !cols.includes("day")) {
+    db.run("DROP TABLE commit_history;");
+  }
   db.run(`
     CREATE TABLE IF NOT EXISTS commit_history (
-      month    TEXT NOT NULL,
+      day      TEXT NOT NULL,
       language TEXT NOT NULL,
       commits  INTEGER NOT NULL DEFAULT 0,
       added    INTEGER NOT NULL DEFAULT 0,
       deleted  INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY (month, language)
+      PRIMARY KEY (day, language)
     );
   `);
   return db;
@@ -82,7 +90,7 @@ export function upsertSnapshot(row: SnapshotRow): void {
 }
 
 export interface CommitHistoryRow {
-  month: string;
+  day: string;
   language: string;
   commits: number;
   added: number;
@@ -92,15 +100,15 @@ export interface CommitHistoryRow {
 export function upsertCommitHistory(row: CommitHistoryRow): void {
   getDb()
     .query(
-      `INSERT INTO commit_history (month, language, commits, added, deleted)
-       VALUES ($month, $language, $commits, $added, $deleted)
-       ON CONFLICT(month, language) DO UPDATE SET
+      `INSERT INTO commit_history (day, language, commits, added, deleted)
+       VALUES ($day, $language, $commits, $added, $deleted)
+       ON CONFLICT(day, language) DO UPDATE SET
          commits = excluded.commits,
          added   = excluded.added,
          deleted = excluded.deleted;`
     )
     .run({
-      $month: row.month,
+      $day: row.day,
       $language: row.language,
       $commits: row.commits,
       $added: row.added,
@@ -108,30 +116,30 @@ export function upsertCommitHistory(row: CommitHistoryRow): void {
     });
 }
 
-export interface MonthHistory {
-  month: string;
+export interface DayHistory {
+  day: string;
   languages: { language: string; commits: number; added: number; deleted: number }[];
 }
 
-export function commitHistoryByMonth(): MonthHistory[] {
+export function commitHistoryByDay(): DayHistory[] {
   const rows = getDb()
     .query<CommitHistoryRow, []>(
-      "SELECT * FROM commit_history ORDER BY month ASC, added DESC"
+      "SELECT * FROM commit_history ORDER BY day ASC, added DESC"
     )
     .all();
-  const byMonth = new Map<string, MonthHistory>();
+  const byDay = new Map<string, DayHistory>();
   for (const r of rows) {
-    let m = byMonth.get(r.month);
-    if (!m) {
-      m = { month: r.month, languages: [] };
-      byMonth.set(r.month, m);
+    let d = byDay.get(r.day);
+    if (!d) {
+      d = { day: r.day, languages: [] };
+      byDay.set(r.day, d);
     }
-    m.languages.push({
+    d.languages.push({
       language: r.language,
       commits: r.commits,
       added: r.added,
       deleted: r.deleted,
     });
   }
-  return [...byMonth.values()];
+  return [...byDay.values()];
 }

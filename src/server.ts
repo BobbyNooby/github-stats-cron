@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
-import { allSnapshots, commitHistoryByMonth, latestSnapshot } from "./db";
+import { allSnapshots, commitHistoryByDay, latestSnapshot } from "./db";
 import { ingest } from "./ingest";
 
 interface ServerOptions {
@@ -197,8 +197,8 @@ export function createServer(opts: ServerOptions) {
     .get(
       "/api/lang-history",
       () => {
-        const months = commitHistoryByMonth();
-        if (months.length === 0) {
+        const days = commitHistoryByDay();
+        if (days.length === 0) {
           return new Response(
             JSON.stringify({
               error: "no commit history — run scripts/backfill-history.ts --db $DB_PATH",
@@ -206,14 +206,14 @@ export function createServer(opts: ServerOptions) {
             { status: 404, headers: { "Content-Type": "application/json" } }
           );
         }
-        return { months };
+        return { days };
       },
       {
         detail: {
           tags: ["stats"],
-          summary: "Commit history by month and language",
+          summary: "Commit history by day and language",
           description:
-            "Backfilled from git history via scripts/backfill-history.ts: per month, lines/commits per language. Powers the evolution chart.",
+            "Backfilled from git history via scripts/backfill-history.ts: per day, lines/commits per language. Powers the line graphs.",
         },
       }
     )

@@ -135,14 +135,15 @@ export async function backfillGitHistory(
   }
 
   const mine = allCommits.filter((c) => isMine(username, c.authorName, c.authorEmail));
+  // aggregate by DAY (chart-grade granularity); year summary derived below
   const rowsMap = new Map<string, CommitHistoryRow>();
   const byYear: Record<string, { commits: number; added: number; deleted: number }> = {};
   const topLangs: Record<string, { added: number; deleted: number; commits: Set<string> }> = {};
   const reposWithCommits = new Set<string>();
 
   for (const c of mine) {
-    const y = c.date.slice(0, 4);
-    const m = c.date.slice(0, 7);
+    const day = c.date.slice(0, 10);
+    const y = day.slice(0, 4);
     byYear[y] ??= { commits: 0, added: 0, deleted: 0 };
     byYear[y]!.commits++;
     reposWithCommits.add(c.repo);
@@ -154,10 +155,10 @@ export async function backfillGitHistory(
       byYear[y]!.added += f.added;
       byYear[y]!.deleted += f.deleted;
 
-      const key = `${m}|${lang}`;
+      const key = `${day}|${lang}`;
       let row = rowsMap.get(key);
       if (!row) {
-        row = { month: m, language: lang, commits: 0, added: 0, deleted: 0 };
+        row = { day, language: lang, commits: 0, added: 0, deleted: 0 };
         rowsMap.set(key, row);
       }
       row.added += f.added;
@@ -168,7 +169,7 @@ export async function backfillGitHistory(
       topLangs[lang]!.deleted += f.deleted;
       topLangs[lang]!.commits.add(c.hash);
     }
-    for (const lang of touched) rowsMap.get(`${m}|${lang}`)!.commits++;
+    for (const lang of touched) rowsMap.get(`${day}|${lang}`)!.commits++;
   }
 
   return {
