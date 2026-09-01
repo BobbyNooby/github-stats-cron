@@ -1,0 +1,17 @@
+services:
+  github-stats-cron:
+    build: .
+    image: github-stats-cron
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      GITHUB_USERNAME: ${GITHUB_USERNAME:?set GITHUB_USERNAME in .env}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      API_SECRET: ${API_SECRET:-}
+      REFRESH_SECRET: ${REFRESH_SECRET:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      INTERVAL_HOURS: ${INTERVAL_HOURS:-24}
+      DB_PATH: /data/stats.db
+    volumes:
+      - ./data:/data
