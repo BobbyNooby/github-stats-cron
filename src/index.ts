@@ -57,12 +57,8 @@ if (ingestOnly) {
   process.exit(0);
 }
 
-if (isStale()) {
-  log("no fresh snapshot found, ingesting...");
-  await runIngest();
-} else {
-  log(`last snapshot is fresh (${latestSnapshot()?.taken_at}), skipping initial ingest`);
-}
+log("taking startup snapshot...");
+await runIngest();
 
 const startedAt = new Date();
 const app = createServer({
