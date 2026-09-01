@@ -102,6 +102,7 @@ async function graphql(login: string, token: string, cursor: string | null) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ query: QUERY, variables: { login, cursor } }),
+    signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) {
     throw new Error(`GitHub API HTTP ${res.status}: ${await res.text()}`);
@@ -159,6 +160,7 @@ interface RestRepo {
 async function restFetch(url: string): Promise<unknown> {
   const res = await fetch(url, {
     headers: { Accept: "application/vnd.github+json" },
+    signal: AbortSignal.timeout(30_000),
   });
   if (res.status === 403 || res.status === 429) {
     throw new Error(
