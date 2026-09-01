@@ -1,5 +1,6 @@
 import { initDb, latestSnapshot } from "./db";
 import { ingest } from "./ingest";
+import { syncCommitHistory } from "./history-sync";
 import { createServer } from "./server";
 
 function env(name: string): string | undefined {
@@ -43,6 +44,8 @@ const runIngest = async (): Promise<void> => {
   } catch (err) {
     log("ingest failed, keeping last snapshot:", err instanceof Error ? err.message : err);
   }
+  // the git-history table rides along with every snapshot cycle
+  await syncCommitHistory(USERNAME, DB_PATH);
 }
 
 function isStale(): boolean {

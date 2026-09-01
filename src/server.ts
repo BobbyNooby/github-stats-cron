@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
-import { allSnapshots, latestSnapshot } from "./db";
+import { allSnapshots, commitHistoryByMonth, latestSnapshot } from "./db";
 import { ingest } from "./ingest";
 
 interface ServerOptions {
@@ -191,6 +191,29 @@ export function createServer(opts: ServerOptions) {
           tags: ["stats"],
           summary: "Contribution calendar",
           description: "The contribution calendar (green squares data) from the latest snapshot.",
+        },
+      }
+    )
+    .get(
+      "/api/lang-history",
+      () => {
+        const months = commitHistoryByMonth();
+        if (months.length === 0) {
+          return new Response(
+            JSON.stringify({
+              error: "no commit history — run scripts/backfill-history.ts --db $DB_PATH",
+            }),
+            { status: 404, headers: { "Content-Type": "application/json" } }
+          );
+        }
+        return { months };
+      },
+      {
+        detail: {
+          tags: ["stats"],
+          summary: "Commit history by month and language",
+          description:
+            "Backfilled from git history via scripts/backfill-history.ts: per month, lines/commits per language. Powers the evolution chart.",
         },
       }
     )

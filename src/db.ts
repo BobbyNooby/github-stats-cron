@@ -26,6 +26,16 @@ export function initDb(path: string): Database {
       repo_count  INTEGER NOT NULL DEFAULT 0
     );
   `);
+  db.run(`
+    CREATE TABLE IF NOT EXISTS commit_history (
+      month    TEXT NOT NULL,
+      language TEXT NOT NULL,
+      commits  INTEGER NOT NULL DEFAULT 0,
+      added    INTEGER NOT NULL DEFAULT 0,
+      deleted  INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (month, language)
+    );
+  `);
   return db;
 }
 
@@ -69,4 +79,59 @@ export function upsertSnapshot(row: SnapshotRow): void {
       $followers: row.followers,
       $repo_count: row.repo_count,
     });
+}
+
+export interface CommitHistoryRow {
+  month: string;
+  language: string;
+  commits: number;
+  added: number;
+  deleted: number;
+}
+
+export function upsertCommitHistory(row: CommitHistoryRow): void {
+  getDb()
+    .query(
+      `INSERT INTO commit_history (month, language, commits, added, deleted)
+       VALUES ($month, $language, $commits, $added, $deleted)
+       ON CONFLICT(month, language) DO UPDATE SET
+         commits = excluded.commits,
+         added   = excluded.added,
+         deleted = excluded.deleted;`
+    )
+    .run({
+      $month: row.month,
+      $language: row.language,
+      $commits: row.commits,
+      $added: row.added,
+      $deleted: row.deleted,
+    });
+}
+
+export interface MonthHistory {
+  month: string;
+  languages: { language: string; commits: number; added: number; deleted: number }[];
+}
+
+export function commitHistoryByMonth(): MonthHistory[] {
+  const rows = getDb()
+    .query<CommitHistoryRow, []>(
+      "SELECT * FROM commit_history ORDER BY month ASC, added DESC"
+    )
+    .all();
+  const byMonth = new Map<string, MonthHistory>();
+  for (const r of rows) {
+    let m = byMonth.get(r.month);
+    if (!m) {
+      m = { month: r.month, languages: [] };
+      byMonth.set(r.month, m);
+    }
+    m.languages.push({
+      language: r.language,
+      commits: r.commits,
+      added: r.added,
+      deleted: r.deleted,
+    });
+  }
+  return [...byMonth.values()];
 }
