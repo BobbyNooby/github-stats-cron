@@ -4,29 +4,18 @@
  */
 import { $ } from "bun";
 import type { CommitHistoryRow } from "./db";
-
-const EXT_TO_LANG: Record<string, string> = {
-  ts: "TypeScript", tsx: "TypeScript", mts: "TypeScript", cts: "TypeScript",
-  js: "JavaScript", jsx: "JavaScript", mjs: "JavaScript", cjs: "JavaScript",
-  svelte: "Svelte", vue: "Vue", astro: "Astro",
-  py: "Python", pyi: "Python", ipynb: "Jupyter", gd: "GDScript",
-  java: "Java", cs: "C#", go: "Go", rs: "Rust", php: "PHP", rb: "Ruby",
-  kt: "Kotlin", kts: "Kotlin", swift: "Swift", dart: "Dart", zig: "Zig",
-  lua: "Lua", ex: "Elixir", exs: "Elixir", hs: "Haskell", scala: "Scala",
-  c: "C", h: "C", cpp: "C++", cc: "C++", cxx: "C++", hpp: "C++", hh: "C++",
-  html: "HTML", htm: "HTML", css: "CSS", scss: "SCSS", sass: "SCSS", less: "Less",
-  sh: "Shell", bash: "Shell", zsh: "Shell", ps1: "PowerShell",
-  sql: "SQL", prisma: "Prisma", graphql: "GraphQL", proto: "Protobuf",
-  md: "Markdown", mdx: "MDX", json: "Config", yml: "Config", yaml: "Config",
-  toml: "Config", ini: "Config", cfg: "Config", lock: "Config",
-};
+import { EXT_LANGUAGE, LANGUAGE_TYPE } from "./linguist";
 
 export function langFor(path: string): string {
   const base = path.split("/").pop() ?? path;
-  if (/^dockerfile/i.test(base) || /^\.dockerignore/i.test(base)) return "Docker";
-  if (/^makefile/i.test(base)) return "Makefile";
-  const ext = base.includes(".") ? base.split(".").pop()!.toLowerCase() : "";
-  return EXT_TO_LANG[ext] ?? "Other";
+  const lower = base.toLowerCase();
+  const key = lower.includes(".") ? lower.split(".").pop()! : lower;
+  const hit = EXT_LANGUAGE[key] ?? EXT_LANGUAGE[lower];
+  if (!hit) return "Other";
+  const type = LANGUAGE_TYPE[hit] ?? "programming";
+  if (type === "data") return "Config";
+  if (type === "prose" && hit !== "Markdown") return "Other";
+  return hit;
 }
 
 function isMine(username: string, name: string, email: string): boolean {
