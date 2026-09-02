@@ -3,7 +3,7 @@
 Self-hosted GitHub stats snapshotter. A daily cron pulls your public GitHub stats
 (languages, stars, forks, followers, contributions) into SQLite, and serves them over
 a small JSON API — your own caching/history layer on top of the GitHub API. Pair with
-[github-stats-charts](https://github.com/your-name/github-stats-charts) for SVG charts.
+[github-stats-charts](https://github.com/BobbyNooby/bobbynooby-github-stats) for SVG charts.
 
 GitHub does **not** keep historical language/star data — this snapshots it yourself,
 so history starts accumulating from day one.
@@ -97,7 +97,7 @@ Data persists in `./data/stats.db` (mounted at `/data`).
 3. Attach a persistent volume at `/data` (the compose file already mounts `./data`)
 4. Expose port 3000, give it a domain (e.g. `stats.yourdomain.dev`)
 
-Point [github-stats-charts](https://github.com/your-name/github-stats-charts) at this
+Point [github-stats-charts](https://github.com/BobbyNooby/bobbynooby-github-stats) at this
 service's URL (internal Coolify hostname like `http://github-stats-cron:3000` works too).
 
 ## Storage model
