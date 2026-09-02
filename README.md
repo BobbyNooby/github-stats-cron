@@ -109,3 +109,7 @@ snapshots(taken_at PK, raw_json, languages, total_stars, total_forks, followers,
 ```
 
 Re-running a snapshot the same day UPSERTs that day's row — never destructive.
+
+## License
+
+[MIT](./LICENSE). Fork it, host it, make it yours.
