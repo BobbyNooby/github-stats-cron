@@ -57,6 +57,7 @@ Interactive docs at `/swagger` (OpenAPI JSON at `/swagger/json`).
 | `GET /api/stats` | Latest snapshot: languages `{name, bytes, color, pct}` + totals |
 | `GET /api/history` | Every snapshot ever taken (trend-chart data) |
 | `GET /api/repos` | Per-repo breakdown from the latest snapshot |
+| `GET /api/lang-history` | Git history: per day, lines/commits per language (charts data) |
 | `GET /api/contributions` | Contribution calendar (`null` in tokenless mode) |
 | `POST /api/refresh` | Force an ingest now (needs `REFRESH_SECRET`) |
 | `GET /health` | Public liveness + last snapshot date |
@@ -105,13 +106,24 @@ service's URL (internal Coolify hostname like `http://github-stats-cron:3000` wo
 
 ## Storage model
 
-One row per day, raw response kept for future re-analysis:
+Two tables, one per data source:
 
 ```sql
 snapshots(taken_at PK, raw_json, languages, total_stars, total_forks, followers, repo_count)
+commit_history(day, language, commits, added, deleted)   -- PK (day, language)
 ```
 
-Re-running a snapshot the same day UPSERTs that day's row — never destructive.
+- `snapshots` — one row per day from the GitHub API. Same-day re-runs UPSERT
+  that day's row. Raw response kept for future re-analysis.
+- `commit_history` — one row per day **per language**, aggregated from git
+  history. Bare clones persist in `<db_dir>/stats-clones`, so daily syncs only
+  fetch new commits; each sync then recomputes and refills the whole table,
+  making it idempotent and self-healing (mapping improvements wipe stale
+  buckets automatically).
+
+**Schema migrations run automatically on boot** — if a table's shape changed
+between versions, the cron migrates it and the next sync refills the data.
+No manual steps.
 
 ## License
 
