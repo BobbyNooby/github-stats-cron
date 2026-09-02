@@ -421,7 +421,7 @@ export const EXT_LANGUAGE: Record<string, string> = {
   "gaml": "GAML",
   "gms": "GAMS",
   "gap": "GAP",
-  "gd": "GAP",
+  "gd": "GDScript",
   "gi": "GAP",
   "tst": "GAP",
   "md": "Markdown",

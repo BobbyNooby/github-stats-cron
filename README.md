@@ -15,6 +15,9 @@ so history starts accumulating from day one.
 - Ingestion failures are logged and never crash the server — it keeps serving the
   last snapshot from SQLite
 
+Language detection is powered by the full [github/linguist](https://github.com/github-linguist/linguist)
+dataset (~1,800 extensions), so git history sees the same languages GitHub does.
+
 Two ingestion modes, chosen automatically:
 
 | | `GITHUB_TOKEN` set | no token |
