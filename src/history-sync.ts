@@ -5,7 +5,7 @@
  */
 import { basename, dirname, join } from "node:path";
 import { backfillGitHistory } from "./backfill";
-import { upsertCommitHistory } from "./db";
+import { clearCommitHistory, upsertCommitHistory } from "./db";
 
 function log(...args: unknown[]) {
   console.log("[commit-history]", ...args);
@@ -15,6 +15,9 @@ export async function syncCommitHistory(username: string, dbPath: string): Promi
   const cloneDir = join(dirname(dbPath), `${basename(dbPath, ".db")}-clones`);
   try {
     const result = await backfillGitHistory(username, cloneDir);
+    // full recompute each run: wipe stale rows (e.g. languages that the
+    // extension map has since learned about, previously counted as Other)
+    clearCommitHistory();
     for (const row of result.rows) upsertCommitHistory(row);
     log(
       `synced ${result.rows.length} rows (${result.repos_with_commits}/${result.repos_analyzed} repos, ` +

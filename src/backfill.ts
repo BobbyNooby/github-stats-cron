@@ -9,7 +9,7 @@ const EXT_TO_LANG: Record<string, string> = {
   ts: "TypeScript", tsx: "TypeScript", mts: "TypeScript", cts: "TypeScript",
   js: "JavaScript", jsx: "JavaScript", mjs: "JavaScript", cjs: "JavaScript",
   svelte: "Svelte", vue: "Vue", astro: "Astro",
-  py: "Python", pyi: "Python", ipynb: "Jupyter",
+  py: "Python", pyi: "Python", ipynb: "Jupyter", gd: "GDScript",
   java: "Java", cs: "C#", go: "Go", rs: "Rust", php: "PHP", rb: "Ruby",
   kt: "Kotlin", kts: "Kotlin", swift: "Swift", dart: "Dart", zig: "Zig",
   lua: "Lua", ex: "Elixir", exs: "Elixir", hs: "Haskell", scala: "Scala",

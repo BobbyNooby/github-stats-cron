@@ -121,6 +121,10 @@ export interface DayHistory {
   languages: { language: string; commits: number; added: number; deleted: number }[];
 }
 
+export function clearCommitHistory(): void {
+  getDb().run("DELETE FROM commit_history;");
+}
+
 export function commitHistoryByDay(): DayHistory[] {
   const rows = getDb()
     .query<CommitHistoryRow, []>(
